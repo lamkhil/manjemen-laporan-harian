@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "laporan-dpmptsp-surabaya"
+  },
+  "targets": {
+    "laporan-dpmptsp-surabaya": {
+      "hosting": {
+        "app": ["laporan-dpmptsp"]
+      }
+    }
+  }
+}
