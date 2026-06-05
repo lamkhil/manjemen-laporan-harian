@@ -15,10 +15,14 @@ class ReportController extends Controller
     public function index(Request $request): JsonResponse
     {
         $q = Report::query()
-            ->with(['user:id,name,unit_kerja,jabatan'])
+            ->with(['user:id,name,unit_kerja,jabatan', 'category:id,name,color,is_service', 'bidang:id,name'])
             ->withCount('items')
             ->orderByDesc('report_date')
             ->orderByDesc('id');
+
+        if ($bid = $request->integer('bidang_id')) {
+            $q->where('bidang_id', $bid);
+        }
 
         if ($from = $request->date('from')) {
             $q->whereDate('report_date', '>=', $from);
@@ -28,9 +32,6 @@ class ReportController extends Controller
         }
         if ($date = $request->date('date')) {
             $q->whereDate('report_date', $date);
-        }
-        if ($shift = $request->string('shift')->toString()) {
-            $q->where('shift', $shift);
         }
         if ($status = $request->string('status')->toString()) {
             $q->where('status', $status);
@@ -54,7 +55,12 @@ class ReportController extends Controller
 
         $report->load([
             'user:id,name,unit_kerja,jabatan',
+            'category:id,name,color,is_service',
+            'bidang:id,name',
             'items.category',
+            'items.lokasi:id,name',
+            'items.loket:id,name',
+            'items.jenisLayanan:id,name',
             'items.photos',
         ]);
 
@@ -66,21 +72,25 @@ class ReportController extends Controller
         $data = $request->validate([
             'title' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:255',
-            'kecamatan' => 'nullable|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'bidang_id' => 'nullable|exists:bidangs,id',
             'report_date' => 'required|date',
-            'shift' => 'required|string|max:32',
             'time_start' => 'nullable|date_format:H:i',
             'time_end' => 'nullable|date_format:H:i',
             'notes' => 'nullable|string',
+            'violations_count' => 'nullable|integer|min:0',
             'status' => 'nullable|in:draft,final',
         ]);
 
         $data['user_id'] = $request->user()->id;
-        $data['title'] = $data['title'] ?? 'LAPORAN PENGAWASAN KEWILAYAHAN';
+        $data['title'] = $data['title'] ?? 'LAPORAN HARIAN DPMPTSP';
+        if (empty($data['bidang_id'])) {
+            $data['bidang_id'] = $request->user()->bidang_id;
+        }
 
         $report = Report::create($data);
 
-        return response()->json($report->fresh(), 201);
+        return response()->json($report->fresh()->load(['category:id,name,color,is_service', 'bidang:id,name']), 201);
     }
 
     public function update(Request $request, Report $report): JsonResponse
@@ -90,18 +100,19 @@ class ReportController extends Controller
         $data = $request->validate([
             'title' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:255',
-            'kecamatan' => 'nullable|string|max:255',
+            'category_id' => 'sometimes|exists:categories,id',
+            'bidang_id' => 'nullable|exists:bidangs,id',
             'report_date' => 'sometimes|date',
-            'shift' => 'sometimes|string|max:32',
             'time_start' => 'nullable|date_format:H:i',
             'time_end' => 'nullable|date_format:H:i',
             'notes' => 'nullable|string',
+            'violations_count' => 'nullable|integer|min:0',
             'status' => 'nullable|in:draft,final',
         ]);
 
         $report->update($data);
 
-        return response()->json($report->fresh());
+        return response()->json($report->fresh()->load(['category:id,name,color,is_service', 'bidang:id,name']));
     }
 
     public function destroy(Request $request, Report $report): JsonResponse
@@ -127,9 +138,22 @@ class ReportController extends Controller
         $data = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'time' => 'nullable|date_format:H:i',
-            'location' => 'required|string|max:255',
+            'location' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'sort_order' => 'nullable|integer',
+            'lokasi_id' => 'nullable|exists:lokasis,id',
+            'loket_id' => 'nullable|exists:lokets,id',
+            'jenis_layanan_id' => 'nullable|exists:jenis_layanans,id',
+            'nib' => 'nullable|string|max:64',
+            'applicant_name' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|max:4',
+            'company' => 'nullable|string|max:255',
+            'company_address' => 'nullable|string',
+            'phone' => 'nullable|string|max:64',
+            'email' => 'nullable|string|max:255',
+            'purpose' => 'nullable|string|max:255',
+            'complaint' => 'nullable|string',
+            'solution' => 'nullable|string',
         ]);
 
         $data['report_id'] = $report->id;
@@ -139,7 +163,7 @@ class ReportController extends Controller
 
         $item = ReportItem::create($data);
 
-        return response()->json($item->load(['category', 'photos']), 201);
+        return response()->json($item->load(['category', 'lokasi:id,name', 'loket:id,name', 'jenisLayanan:id,name', 'photos']), 201);
     }
 
     public function updateItem(Request $request, Report $report, ReportItem $item): JsonResponse
@@ -150,14 +174,27 @@ class ReportController extends Controller
         $data = $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
             'time' => 'nullable|date_format:H:i',
-            'location' => 'sometimes|string|max:255',
+            'location' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'sort_order' => 'nullable|integer',
+            'lokasi_id' => 'nullable|exists:lokasis,id',
+            'loket_id' => 'nullable|exists:lokets,id',
+            'jenis_layanan_id' => 'nullable|exists:jenis_layanans,id',
+            'nib' => 'nullable|string|max:64',
+            'applicant_name' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|max:4',
+            'company' => 'nullable|string|max:255',
+            'company_address' => 'nullable|string',
+            'phone' => 'nullable|string|max:64',
+            'email' => 'nullable|string|max:255',
+            'purpose' => 'nullable|string|max:255',
+            'complaint' => 'nullable|string',
+            'solution' => 'nullable|string',
         ]);
 
         $item->update($data);
 
-        return response()->json($item->load(['category', 'photos']));
+        return response()->json($item->load(['category', 'lokasi:id,name', 'loket:id,name', 'jenisLayanan:id,name', 'photos']));
     }
 
     public function destroyItem(Request $request, Report $report, ReportItem $item): JsonResponse

@@ -10,27 +10,39 @@ class Report extends Model
 {
     protected $fillable = [
         'user_id',
+        'bidang_id',
+        'category_id',
         'title',
         'subtitle',
-        'kecamatan',
         'report_date',
-        'shift',
         'time_start',
         'time_end',
         'notes',
+        'violations_count',
         'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'report_date' => 'date',
+            'report_date' => 'date:Y-m-d',
+            'violations_count' => 'integer',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function bidang(): BelongsTo
+    {
+        return $this->belongsTo(Bidang::class);
     }
 
     public function items(): HasMany

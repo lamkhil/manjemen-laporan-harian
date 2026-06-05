@@ -31,13 +31,13 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => $user,
+            'user' => $user->load(['bidang:id,name', 'defaultLokasi:id,name', 'defaultLoket:id,name']),
         ]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json($request->user());
+        return response()->json($request->user()->load(['bidang:id,name', 'defaultLokasi:id,name', 'defaultLoket:id,name']));
     }
 
     public function logout(Request $request): JsonResponse

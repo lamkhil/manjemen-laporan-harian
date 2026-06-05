@@ -14,7 +14,7 @@ class UserController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $q = User::query()->orderBy('name');
+        $q = User::query()->with(['bidang:id,name', 'defaultLokasi:id,name', 'defaultLoket:id,name'])->orderBy('name');
         if ($s = $request->string('search')->toString()) {
             $q->where(fn ($w) => $w->where('name', 'ilike', "%$s%")
                 ->orWhere('nip', 'ilike', "%$s%")
@@ -39,12 +39,15 @@ class UserController extends Controller
             'role' => 'required|in:admin,user',
             'unit_kerja' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
+            'bidang_id' => 'nullable|exists:bidangs,id',
+            'default_lokasi_id' => 'nullable|exists:lokasis,id',
+            'default_loket_id' => 'nullable|exists:lokets,id',
         ]);
 
         $data['password'] = Hash::make($data['password']);
         $user = User::create($data);
 
-        return response()->json($user, 201);
+        return response()->json($user->load(['bidang:id,name', 'defaultLokasi:id,name', 'defaultLoket:id,name']), 201);
     }
 
     public function update(Request $request, User $user): JsonResponse
@@ -59,6 +62,9 @@ class UserController extends Controller
             'role' => 'sometimes|in:admin,user',
             'unit_kerja' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
+            'bidang_id' => 'nullable|exists:bidangs,id',
+            'default_lokasi_id' => 'nullable|exists:lokasis,id',
+            'default_loket_id' => 'nullable|exists:lokets,id',
         ]);
 
         if (! empty($data['password'])) {
@@ -69,7 +75,7 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return response()->json($user->fresh());
+        return response()->json($user->fresh()->load(['bidang:id,name', 'defaultLokasi:id,name', 'defaultLoket:id,name']));
     }
 
     public function destroy(Request $request, User $user): JsonResponse
@@ -165,9 +171,9 @@ class UserController extends Controller
     {
         $csv = "nip,nama,email,password,role,unit_kerja,jabatan\n"
             . "198001012005011001,Budi Hartono,budi@dpmptsp-surabaya.my.id,password123,admin,DPMPTSP Kota Surabaya,Kepala Bidang\n"
-            . "198505152010012003,Siti Rahayu,siti@dpmptsp-surabaya.my.id,password123,user,Kecamatan Sukolilo,Petugas Pengawas Wilayah\n"
-            . "199003202012011004,Ahmad Yusuf,,password123,user,Kecamatan Mulyorejo,Petugas Pengawas Wilayah\n"
-            . "3578012345678901,Dewi Lestari,dewi@dpmptsp-surabaya.my.id,password123,user,Kecamatan Tegalsari,Pegawai Kontrak\n";
+            . "198505152010012003,Siti Rahayu,siti@dpmptsp-surabaya.my.id,password123,user,DPMPTSP Kota Surabaya,Petugas Klinik Investasi\n"
+            . "199003202012011004,Ahmad Yusuf,,password123,user,DPMPTSP Kota Surabaya,Petugas Loket Perizinan\n"
+            . "3578012345678901,Dewi Lestari,dewi@dpmptsp-surabaya.my.id,password123,user,DPMPTSP Kota Surabaya,Pegawai Kontrak\n";
 
         return response()->streamDownload(
             fn () => print($csv),

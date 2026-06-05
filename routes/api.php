@@ -1,7 +1,12 @@
 <?php
 
+use App\Http\Controllers\AktivitasController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BidangController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\JenisLayananController;
+use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\LoketController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportPdfController;
 use App\Http\Controllers\StatsController;
@@ -21,6 +26,39 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stats/summary', [StatsController::class, 'summary']);
 
     Route::apiResource('categories', CategoryController::class);
+
+    Route::get('bidangs', [BidangController::class, 'index']);
+    Route::post('bidangs', [BidangController::class, 'store']);
+    Route::patch('bidangs/{bidang}', [BidangController::class, 'update']);
+    Route::delete('bidangs/{bidang}', [BidangController::class, 'destroy']);
+
+    Route::get('jenis-layanans', [JenisLayananController::class, 'index']);
+    Route::post('jenis-layanans', [JenisLayananController::class, 'store']);
+    Route::patch('jenis-layanans/{jenis_layanan}', [JenisLayananController::class, 'update']);
+    Route::delete('jenis-layanans/{jenis_layanan}', [JenisLayananController::class, 'destroy']);
+
+    Route::get('reports-rekap/pdf', [ReportPdfController::class, 'rekapDownload']);
+    Route::get('reports-rekap/preview', [ReportPdfController::class, 'rekapPreview']);
+    Route::get('reports-rekap/bidang/{bidang}/pdf', [ReportPdfController::class, 'rekapBidangDownload']);
+    Route::get('reports-rekap/bidang/{bidang}/preview', [ReportPdfController::class, 'rekapBidangPreview']);
+
+    Route::get('aktivitas', [AktivitasController::class, 'index']);
+    Route::get('aktivitas/{aktivita}', [AktivitasController::class, 'show']);
+    Route::post('aktivitas', [AktivitasController::class, 'store']);
+    Route::patch('aktivitas/{aktivita}', [AktivitasController::class, 'update']);
+    Route::delete('aktivitas/{aktivita}', [AktivitasController::class, 'destroy']);
+    Route::post('aktivitas/{aktivita}/photos', [AktivitasController::class, 'uploadPhoto']);
+    Route::delete('aktivitas/{aktivita}/photos/{photo}', [AktivitasController::class, 'deletePhoto']);
+
+    Route::get('lokasis', [LokasiController::class, 'index']);
+    Route::post('lokasis', [LokasiController::class, 'store']);
+    Route::patch('lokasis/{lokasi}', [LokasiController::class, 'update']);
+    Route::delete('lokasis/{lokasi}', [LokasiController::class, 'destroy']);
+
+    Route::get('lokets', [LoketController::class, 'index']);
+    Route::post('lokets', [LoketController::class, 'store']);
+    Route::patch('lokets/{loket}', [LoketController::class, 'update']);
+    Route::delete('lokets/{loket}', [LoketController::class, 'destroy']);
 
     Route::get('users', [UserController::class, 'index']);
     Route::post('users', [UserController::class, 'store']);

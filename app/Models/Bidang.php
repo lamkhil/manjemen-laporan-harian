@@ -6,15 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-class Category extends Model
+class Bidang extends Model
 {
+    protected $table = 'bidangs';
+
     protected $fillable = [
         'name',
         'slug',
-        'color',
-        'icon',
-        'is_violation',
-        'is_service',
         'description',
         'is_active',
         'sort_order',
@@ -23,8 +21,6 @@ class Category extends Model
     protected function casts(): array
     {
         return [
-            'is_violation' => 'boolean',
-            'is_service' => 'boolean',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];
@@ -32,15 +28,25 @@ class Category extends Model
 
     protected static function booted(): void
     {
-        static::saving(function (Category $category) {
-            if (empty($category->slug)) {
-                $category->slug = Str::slug($category->name);
+        static::saving(function (Bidang $b) {
+            if (empty($b->slug)) {
+                $b->slug = Str::slug($b->name);
             }
         });
     }
 
-    public function reportItems(): HasMany
+    public function jenisLayanans(): HasMany
     {
-        return $this->hasMany(ReportItem::class);
+        return $this->hasMany(JenisLayanan::class)->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
     }
 }

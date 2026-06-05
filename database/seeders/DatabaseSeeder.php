@@ -10,30 +10,44 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@dpmptsp-surabaya.my.id'],
-            [
+        $admin = User::where('nip', 'admin')->orWhere('email', 'admin@dpmptsp-surabaya.my.id')->first();
+        if ($admin) {
+            $admin->update([
                 'name' => 'Administrator',
-                'nip' => '198001012005011001',
-                'password' => Hash::make('admin123'),
+                'nip' => 'admin',
+                'email' => 'admin@dpmptsp-surabaya.my.id',
+                'password' => Hash::make('admin'),
                 'role' => 'admin',
                 'unit_kerja' => 'DPMPTSP Kota Surabaya',
                 'jabatan' => 'Administrator Sistem',
-            ]
-        );
+            ]);
+        } else {
+            User::create([
+                'name' => 'Administrator',
+                'nip' => 'admin',
+                'email' => 'admin@dpmptsp-surabaya.my.id',
+                'password' => Hash::make('admin'),
+                'role' => 'admin',
+                'unit_kerja' => 'DPMPTSP Kota Surabaya',
+                'jabatan' => 'Administrator Sistem',
+            ]);
+        }
 
         User::updateOrCreate(
             ['email' => 'user@dpmptsp-surabaya.my.id'],
             [
-                'name' => 'Petugas Sukolilo',
+                'name' => 'Petugas DPMPTSP',
                 'nip' => '198505152010012003',
                 'password' => Hash::make('user123'),
                 'role' => 'user',
-                'unit_kerja' => 'Kecamatan Sukolilo',
-                'jabatan' => 'Petugas Pengawas Wilayah',
+                'unit_kerja' => 'DPMPTSP Kota Surabaya',
+                'jabatan' => 'Petugas Klinik Investasi',
             ]
         );
 
+        $this->call(BidangSeeder::class);
+        $this->call(LokasiSeeder::class);
         $this->call(CategorySeeder::class);
+        $this->call(DemoPelayananSeeder::class);
     }
 }

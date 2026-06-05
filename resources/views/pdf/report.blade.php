@@ -68,100 +68,168 @@
     </svg>
   </div>
   <div class="title">
-    <h1>{{ strtoupper($report->title ?: 'LAPORAN PENGAWASAN KEWILAYAHAN') }}</h1>
-    @if($report->kecamatan)
-      <h2>KECAMATAN {{ strtoupper($report->kecamatan) }}</h2>
+    <h1>{{ strtoupper($report->title ?: 'LAPORAN HARIAN DPMPTSP') }}</h1>
+    @if($report->category)
+      <h2>KATEGORI: {{ strtoupper($report->category->name) }}</h2>
     @elseif($report->subtitle)
       <h2>{{ strtoupper($report->subtitle) }}</h2>
     @endif
-    <div class="date">{{ $tanggal_label }}, (Shift {{ $report->shift }}){{ $jam_label }}</div>
+    <div class="date">{{ $tanggal_label }}{{ $jam_label }}</div>
   </div>
 </div>
 
-<div class="grid">
-  <div class="row">
-    <div class="col"><div class="card"><span class="icon icon-blue">L</span><div class="label">Total Laporan</div><div class="value">{{ $stats['total_items'] }}</div></div></div>
-    <div class="col"><div class="card"><span class="icon icon-red">!</span><div class="label">Total Pelanggaran</div><div class="value">{{ $stats['violations'] }}</div></div></div>
+@if($is_service)
+  <div class="grid">
+    <div class="row">
+      <div class="col"><div class="card"><span class="icon icon-blue">P</span><div class="label">Total Pemohon</div><div class="value">{{ $stats['total_items'] }}</div></div></div>
+      <div class="col"><div class="card"><span class="icon icon-green">U</span><div class="label">Perusahaan Unik</div><div class="value">{{ $stats['companies'] }}</div></div></div>
+    </div>
+    <div class="row">
+      <div class="col"><div class="card"><span class="icon icon-violet">L</span><div class="label">Laki-laki / Perempuan</div><div class="value sm">{{ $stats['male'] }} / {{ $stats['female'] }}</div></div></div>
+      <div class="col"><div class="card"><span class="icon icon-amber">#</span><div class="label">Keperluan Terbanyak</div><div class="value sm">{{ \Illuminate\Support\Str::limit($stats['top_purpose'], 22) }}</div></div></div>
+    </div>
   </div>
-  <div class="row">
-    <div class="col"><div class="card"><span class="icon icon-green">P</span><div class="label">Total Lokasi Diawasi</div><div class="value">{{ $stats['locations'] }}</div></div></div>
-    <div class="col"><div class="card"><span class="icon icon-amber">#</span><div class="label">Aktivitas Terbanyak</div><div class="value sm">{{ \Illuminate\Support\Str::limit($stats['top_activity'], 22) }}</div></div></div>
-  </div>
-  <div class="row">
-    <div class="col"><div class="card"><span class="icon icon-violet">U</span><div class="label">PKL Ditertibkan</div><div class="value">{{ $stats['pkl'] }}</div></div></div>
-    <div class="col"><div class="card"><span class="icon icon-pink">B</span><div class="label">Baliho/Banner Liar</div><div class="value">{{ $stats['baliho'] }}</div></div></div>
-  </div>
-</div>
 
-<div class="section">
-  <h3>Distribusi Jenis Kegiatan</h3>
-  @php $palette = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#ef4444','#84cc16']; @endphp
-  @forelse($cat_bars as $i => $bar)
-    <div class="bar-row">
-      <div class="bar-label">{{ \Illuminate\Support\Str::limit($bar['name'], 24) }}</div>
-      <div class="bar-track"><div class="bar" style="width: {{ $bar['pct'] }}%; background: {{ $palette[$i % count($palette)] }};"></div></div>
-      <div class="bar-count">{{ $bar['count'] }}</div>
+  <div class="section">
+    <h3>Distribusi Keperluan</h3>
+    @php $palette = ['#0ea5e9','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#ef4444','#84cc16']; @endphp
+    @forelse($purpose_bars as $i => $bar)
+      <div class="bar-row">
+        <div class="bar-label">{{ \Illuminate\Support\Str::limit($bar['name'], 30) }}</div>
+        <div class="bar-track"><div class="bar" style="width: {{ $bar['pct'] }}%; background: {{ $palette[$i % count($palette)] }};"></div></div>
+        <div class="bar-count">{{ $bar['count'] }}</div>
+      </div>
+    @empty
+      <div class="muted">Belum ada data.</div>
+    @endforelse
+  </div>
+@else
+  <div class="grid">
+    <div class="row">
+      <div class="col"><div class="card"><span class="icon icon-blue">L</span><div class="label">Total Laporan</div><div class="value">{{ $stats['total_items'] }}</div></div></div>
+      <div class="col"><div class="card"><span class="icon icon-red">!</span><div class="label">Total Pelanggaran</div><div class="value">{{ $stats['violations'] }}</div></div></div>
     </div>
-  @empty
-    <div class="muted">Belum ada data.</div>
-  @endforelse
-</div>
-
-<div class="section">
-  <h3>Temuan Pelanggaran</h3>
-  <div class="donut-wrap">
-    <div class="donut-cell">
-      <div class="pie"><div class="pct">{{ $stats['violation_pct'] }}%</div></div>
+    <div class="row">
+      <div class="col"><div class="card"><span class="icon icon-green">P</span><div class="label">Total Lokasi Diawasi</div><div class="value">{{ $stats['locations'] }}</div></div></div>
+      <div class="col"><div class="card"><span class="icon icon-amber">#</span><div class="label">Aktivitas Terbanyak</div><div class="value sm">{{ \Illuminate\Support\Str::limit($stats['top_activity'], 22) }}</div></div></div>
     </div>
-    <div class="donut-text">
-      <table style="width: 100%;">
-        <tr><td class="muted">Total Pelanggaran:</td><td style="color:#dc2626; font-weight:700; font-size:16px;">{{ $stats['violations'] }}</td><td class="muted" style="padding-left:24px;">PKL: {{ $stats['pkl'] }}</td></tr>
-        <tr><td class="muted">Dari Total Laporan:</td><td style="font-weight:700; font-size:16px;">{{ $stats['total_items'] }}</td><td class="muted" style="padding-left:24px;">Baliho: {{ $stats['baliho'] }}</td></tr>
-      </table>
+    <div class="row">
+      <div class="col"><div class="card"><span class="icon icon-violet">U</span><div class="label">PKL Ditertibkan</div><div class="value">{{ $stats['pkl'] }}</div></div></div>
+      <div class="col"><div class="card"><span class="icon icon-pink">B</span><div class="label">Baliho/Banner Liar</div><div class="value">{{ $stats['baliho'] }}</div></div></div>
     </div>
   </div>
-</div>
+
+  <div class="section">
+    <h3>Distribusi Jenis Kegiatan</h3>
+    @php $palette = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#ef4444','#84cc16']; @endphp
+    @forelse($cat_bars as $i => $bar)
+      <div class="bar-row">
+        <div class="bar-label">{{ \Illuminate\Support\Str::limit($bar['name'], 24) }}</div>
+        <div class="bar-track"><div class="bar" style="width: {{ $bar['pct'] }}%; background: {{ $palette[$i % count($palette)] }};"></div></div>
+        <div class="bar-count">{{ $bar['count'] }}</div>
+      </div>
+    @empty
+      <div class="muted">Belum ada data.</div>
+    @endforelse
+  </div>
+
+  <div class="section">
+    <h3>Temuan Pelanggaran</h3>
+    <div class="donut-wrap">
+      <div class="donut-cell">
+        <div class="pie"><div class="pct">{{ $stats['violation_pct'] }}%</div></div>
+      </div>
+      <div class="donut-text">
+        <table style="width: 100%;">
+          <tr><td class="muted">Total Pelanggaran:</td><td style="color:#dc2626; font-weight:700; font-size:16px;">{{ $stats['violations'] }}</td><td class="muted" style="padding-left:24px;">PKL: {{ $stats['pkl'] }}</td></tr>
+          <tr><td class="muted">Dari Total Laporan:</td><td style="font-weight:700; font-size:16px;">{{ $stats['total_items'] }}</td><td class="muted" style="padding-left:24px;">Baliho: {{ $stats['baliho'] }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+@endif
 
 <div class="page-break"></div>
-<div class="h-section">RINCIAN AKTIVITAS</div>
+<div class="h-section">{{ $is_service ? 'RINCIAN PELAYANAN' : 'RINCIAN AKTIVITAS' }}</div>
 
-<table class="items">
-  <thead>
-    <tr>
-      <th class="center" style="width: 32px;">No</th>
-      <th style="width: 120px;">Jenis Kegiatan</th>
-      <th style="width: 60px;">Waktu</th>
-      <th style="width: 130px;">Lokasi</th>
-      <th>Catatan</th>
-      <th style="width: 130px;">Foto</th>
-    </tr>
-  </thead>
-  <tbody>
-    @forelse($items as $idx => $item)
-      <tr class="{{ $idx % 2 == 0 ? '' : 'alt' }}">
-        <td class="center">{{ $idx + 1 }}</td>
-        <td>{{ $item->category?->name }}</td>
-        <td>{{ $item->time ? substr($item->time, 0, 5) : '-' }}</td>
-        <td>{{ $item->location }}</td>
-        <td class="pre">{{ $item->notes }}</td>
-        <td>
-          <div class="photo-grid">
-            @foreach($item->photos as $photo)
-              @php
-                $abs = storage_path('app/public/' . $photo->path);
-              @endphp
-              @if(file_exists($abs))
-                <img src="{{ $abs }}">
-              @endif
-            @endforeach
-          </div>
-        </td>
+@if($is_service)
+  <table class="items">
+    <thead>
+      <tr>
+        <th class="center" style="width: 24px;">No</th>
+        <th style="width: 50px;">Waktu</th>
+        <th style="width: 90px;">NIB</th>
+        <th>Nama Pemohon</th>
+        <th>Perusahaan</th>
+        <th style="width: 70px;">Loket</th>
+        <th style="width: 90px;">Jenis Layanan</th>
+        <th>Aduan</th>
+        <th>Solusi</th>
       </tr>
-    @empty
-      <tr><td colspan="6" class="center muted">Belum ada item laporan.</td></tr>
-    @endforelse
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      @forelse($items as $idx => $item)
+        <tr class="{{ $idx % 2 == 0 ? '' : 'alt' }}">
+          <td class="center">{{ $idx + 1 }}</td>
+          <td>{{ $item->time ? substr($item->time, 0, 5) : '-' }}</td>
+          <td>{{ $item->nib ?: '-' }}</td>
+          <td>
+            <div style="font-weight:600;">{{ $item->applicant_name ?: '-' }}{{ $item->gender ? ' ('.$item->gender.')' : '' }}</div>
+            @if($item->phone)<div class="muted">{{ $item->phone }}</div>@endif
+          </td>
+          <td>
+            <div>{{ $item->company ?: '-' }}</div>
+            @if($item->company_address)<div class="muted">{{ \Illuminate\Support\Str::limit($item->company_address, 90) }}</div>@endif
+          </td>
+          <td>{{ $item->loket?->name ?: '-' }}</td>
+          <td>{{ $item->jenisLayanan?->name ?: ($item->purpose ?: '-') }}</td>
+          <td class="pre">{{ $item->complaint }}</td>
+          <td class="pre">{{ $item->solution }}</td>
+        </tr>
+      @empty
+        <tr><td colspan="9" class="center muted">Belum ada data pelayanan.</td></tr>
+      @endforelse
+    </tbody>
+  </table>
+@else
+  <table class="items">
+    <thead>
+      <tr>
+        <th class="center" style="width: 32px;">No</th>
+        <th style="width: 120px;">Jenis Kegiatan</th>
+        <th style="width: 60px;">Waktu</th>
+        <th style="width: 130px;">Lokasi</th>
+        <th>Catatan</th>
+        <th style="width: 130px;">Foto</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($items as $idx => $item)
+        <tr class="{{ $idx % 2 == 0 ? '' : 'alt' }}">
+          <td class="center">{{ $idx + 1 }}</td>
+          <td>{{ $item->category?->name }}</td>
+          <td>{{ $item->time ? substr($item->time, 0, 5) : '-' }}</td>
+          <td>{{ $item->location }}</td>
+          <td class="pre">{{ $item->notes }}</td>
+          <td>
+            <div class="photo-grid">
+              @foreach($item->photos as $photo)
+                @php
+                  $abs = storage_path('app/public/' . $photo->path);
+                @endphp
+                @if(file_exists($abs))
+                  <img src="{{ $abs }}">
+                @endif
+              @endforeach
+            </div>
+          </td>
+        </tr>
+      @empty
+        <tr><td colspan="6" class="center muted">Belum ada item laporan.</td></tr>
+      @endforelse
+    </tbody>
+  </table>
+@endif
 
 <script type="text/php">
 if (isset($pdf)) {

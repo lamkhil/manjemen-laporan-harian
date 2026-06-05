@@ -5,12 +5,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', '*')))),
+    'allowed_origins' => array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', 'https://laporan-dpmptsp.web.app,https://laporan-dpmptsp.firebaseapp.com')))),
 
-    'allowed_origins_patterns' => [
-        '#^https://[a-z0-9-]+\.web\.app$#i',
-        '#^https://[a-z0-9-]+\.firebaseapp\.com$#i',
-    ],
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
